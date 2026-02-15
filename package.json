@@ -1,0 +1,36 @@
+{
+  "name": "youtube-cookie-extractor",
+  "version": "1.0.0",
+  "description": "Standalone tool to extract YouTube authentication cookies for yt-dlp using Puppeteer",
+  "main": "extract-youtube-cookies.js",
+  "bin": {
+    "youtube-cookies": "./extract-youtube-cookies.js"
+  },
+  "scripts": {
+    "extract": "node extract-youtube-cookies.js",
+    "help": "node extract-youtube-cookies.js --help",
+    "test": "node extract-youtube-cookies.js --help"
+  },
+  "keywords": [
+    "youtube",
+    "cookies",
+    "puppeteer",
+    "yt-dlp",
+    "authentication",
+    "extractor",
+    "standalone",
+    "youtube-dl"
+  ],
+  "author": "YouTube Downloader Team",
+  "license": "MIT",
+  "dependencies": {
+    "puppeteer": "^21.11.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/otienog1/ytdl.git"
+  }
+}
