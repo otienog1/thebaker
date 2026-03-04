@@ -6,3 +6,13 @@ cookies.txt
 npm-debug.log
 .DS_Store
 *.log
+
+# Sensitive configuration files
+servers.json
+.env
+.env.*
+servers.json
+
+
+# Chrome profiles (temporary)
+chrome-profiles/

@@ -9,7 +9,10 @@
   "scripts": {
     "extract": "node extract-youtube-cookies.js",
     "help": "node extract-youtube-cookies.js --help",
-    "test": "node extract-youtube-cookies.js --help"
+    "test": "node extract-youtube-cookies.js --help",
+    "worker": "node cookie-worker.js",
+    "test-worker": "node test-worker.js",
+    "start": "node cookie-worker.js"
   },
   "keywords": [
     "youtube",
@@ -24,7 +27,12 @@
   "author": "YouTube Downloader Team",
   "license": "MIT",
   "dependencies": {
-    "puppeteer": "^21.11.0"
+    "dotenv": "^16.3.1",
+    "ioredis": "^5.3.2",
+    "node-ssh": "^13.1.0",
+    "puppeteer": "^21.11.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
   },
   "engines": {
     "node": ">=14.0.0"
@@ -32,5 +40,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/otienog1/ytdl.git"
-  }
+  },
+  "packageManager": "yarn@4.12.0"
 }

@@ -1,0 +1,41 @@
+[Unit]
+Description=YouTube Cookie Extractor Worker Service
+Documentation=https://github.com/otienog1/ytdl
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ytd
+Group=ytd
+WorkingDirectory=/path/to/thebaker
+Environment="NODE_ENV=production"
+Environment="PATH=/usr/bin:/usr/local/bin"
+
+# Main process
+ExecStart=/usr/bin/node /path/to/thebaker/cookie-worker.js
+
+# Restart policy
+Restart=always
+RestartSec=10
+StartLimitInterval=300
+StartLimitBurst=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=cookie-worker
+
+# Security hardening (optional)
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=false
+ReadWritePaths=/path/to/thebaker/chrome-profiles
+
+# Resource limits (optional)
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
