@@ -12,6 +12,7 @@
     "test": "node extract-youtube-cookies.js --help",
     "worker": "node cookie-worker.js",
     "test-worker": "node test-worker.js",
+    "queue-all": "node queue-all-servers.js",
     "start": "node cookie-worker.js"
   },
   "keywords": [
