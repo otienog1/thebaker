@@ -125,28 +125,51 @@ async function extractYouTubeCookies(profileDir) {
         });
 
         // Small delay and retry to ensure pages are populated
+        await new Promise(resolve => setTimeout(resolve, 2000));
         let pages = await browser.pages();
-        if (pages.length === 0) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            pages = await browser.pages();
-        }
 
-        // Fix: Ensure we actually found a page
-        if (pages.length === 0) {
-            log('No open tabs found. Creating new YouTube tab...', colors.yellow);
-            const newPage = await browser.newPage();
-            await newPage.goto('https://www.youtube.com', { waitUntil: 'networkidle2' });
-            pages = [newPage];
-        }
+        log(`Found ${pages.length} open tabs`, colors.cyan);
 
-        // Look for existing YouTube tab
-        let page = pages.find(p => p && p.url && p.url().includes('youtube.com'));
+        // Look for existing YouTube tab first
+        let page = pages.find(p => {
+            try {
+                return p && p.url && p.url().includes('youtube.com');
+            } catch (e) {
+                return false;
+            }
+        });
 
-        // If no YouTube tab, take the first available tab and navigate
-        if (!page) {
-            page = pages[0];
-            log('Navigating existing tab to YouTube...', colors.yellow);
-            await page.goto('https://www.youtube.com', { waitUntil: 'networkidle2' });
+        // If found YouTube tab, use it
+        if (page) {
+            log('Using existing YouTube tab', colors.green);
+        } else {
+            // No YouTube tab - find any valid page to navigate
+            page = pages.find(p => {
+                try {
+                    return p && p.url && p.url() !== 'about:blank';
+                } catch (e) {
+                    return false;
+                }
+            });
+
+            // If no valid page, use the first one or create new
+            if (!page && pages.length > 0) {
+                page = pages[0];
+            } else if (!page) {
+                log('Creating new tab...', colors.yellow);
+                page = await browser.newPage();
+            }
+
+            // Navigate to YouTube with increased timeout
+            log('Navigating to YouTube...', colors.yellow);
+            try {
+                await page.goto('https://www.youtube.com', {
+                    waitUntil: 'domcontentloaded',
+                    timeout: 60000
+                });
+            } catch (err) {
+                log('Navigation timeout, but continuing anyway...', colors.yellow);
+            }
         }
 
         log('\n' + '='.repeat(50), colors.green);
