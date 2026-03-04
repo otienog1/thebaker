@@ -145,7 +145,30 @@ async function extractYouTubeCookies(profileDir) {
 
         await waitForKeyPress(`${colors.bold}Press ENTER when ready: ${colors.reset}`);
 
-        const cookies = await page.cookies();
+        // Ensure page is fully loaded before extracting cookies
+        // Add delay and retry logic to avoid "Requesting main frame too early" error
+        let cookies;
+        let retries = 3;
+        while (retries > 0) {
+            try {
+                // Wait a bit to ensure page is stable
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // Verify page is still valid
+                if (!page.url()) {
+                    throw new Error('Page not ready');
+                }
+
+                cookies = await page.cookies();
+                break; // Success, exit retry loop
+            } catch (err) {
+                retries--;
+                if (retries === 0) throw err;
+                log(`Retrying cookie extraction (${3 - retries}/3)...`, colors.yellow);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+
         const youtubeCookies = cookies.filter(c => c.domain.includes('youtube.com') || c.domain.includes('google.com'));
 
         if (youtubeCookies.length === 0) throw new Error('No YouTube/Google cookies found.');
