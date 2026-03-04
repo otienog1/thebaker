@@ -48,22 +48,34 @@ function log(message, color = colors.reset) {
 }
 
 /**
- * Launches Chrome only if it isn't already running on the debug port
+ * Kills any existing Chrome process and launches a new one with the specified profile
+ * This ensures clean profile switching between jobs
  */
 async function ensureChromeRunning(profileDir) {
     const port = config.chrome.debugPort;
     const browserURL = `http://127.0.0.1:${port}/json/version`;
 
+    // Always kill existing Chrome to ensure clean profile switch
     try {
-        // Check if port is already active
         const response = await fetch(browserURL);
         if (response.ok) {
-            log('Chrome is already running with debugging enabled.', colors.green);
-            return;
+            log('Closing existing Chrome instance for profile switch...', colors.yellow);
+
+            // Kill Chrome process
+            if (process.platform === 'win32') {
+                spawn('taskkill', ['/F', '/IM', 'chrome.exe'], { stdio: 'ignore' });
+            } else {
+                spawn('pkill', ['-f', 'chrome.*remote-debugging'], { stdio: 'ignore' });
+            }
+
+            // Wait for Chrome to fully close
+            await new Promise(resolve => setTimeout(resolve, 2000));
         }
     } catch (e) {
-        log('Chrome not detected. Launching new instance...', colors.yellow);
+        // Chrome not running, that's fine
     }
+
+    log('Launching Chrome with new profile...', colors.yellow);
 
     let chromePath = config.chrome.path;
     if (!chromePath) {
@@ -85,7 +97,7 @@ async function ensureChromeRunning(profileDir) {
     chromeProcess.unref();
 
     // Wait for the debug interface to initialize
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise(resolve => setTimeout(resolve, 4000));
 }
 
 function waitForKeyPress(query) {
