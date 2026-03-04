@@ -211,6 +211,7 @@ async function sendTestJob() {
   servers.forEach((s, i) => {
     log(`  ${i + 1}. ${s.id} (${s.host})`, colors.cyan);
   });
+  log(`  ${colors.bold}${servers.length + 1}. All servers (sequentially)${colors.reset}`, colors.green);
 
   const readline2 = require('readline').createInterface({
     input: process.stdin,
@@ -219,15 +220,17 @@ async function sendTestJob() {
 
   const serverIndex = await new Promise((resolve) => {
     readline2.question(
-      `${colors.yellow}Select server (1-${servers.length}): ${colors.reset}`,
+      `${colors.yellow}Select server (1-${servers.length + 1}): ${colors.reset}`,
       resolve
     );
   });
 
   readline2.close();
 
-  const server = servers[parseInt(serverIndex) - 1];
-  if (!server) {
+  const selectedIndex = parseInt(serverIndex);
+  const selectedServers = selectedIndex === servers.length + 1 ? servers : [servers[selectedIndex - 1]];
+
+  if (!selectedServers[0]) {
     logError('Invalid server selection');
     return;
   }
@@ -241,24 +244,41 @@ async function sendTestJob() {
   });
 
   try {
-    const requestId = `test-${Date.now()}`;
-    const job = {
-      serverId: server.id,
-      requestId: requestId,
-      timestamp: Date.now(),
-    };
+    log(`\nSending test job(s)...`, colors.yellow);
 
-    log(`\nSending test job...`, colors.yellow);
-    logInfo(`Request ID: ${requestId}`);
-    logInfo(`Server: ${server.id}`);
+    for (const server of selectedServers) {
+      const requestId = `test-${Date.now()}-${server.id}`;
+      const job = {
+        serverId: server.id,
+        requestId: requestId,
+        timestamp: Date.now(),
+      };
 
-    await redis.lpush('youtube:cookie:requests', JSON.stringify(job));
-    logSuccess('Test job sent to queue');
+      logInfo(`Request ID: ${requestId}`);
+      logInfo(`Server: ${server.id} (${server.host})`);
+      logInfo(`Chrome Profile: ${server.chromeProfile || 'default'}`);
+
+      await redis.lpush('youtube:cookie:requests', JSON.stringify(job));
+      logSuccess(`Job queued for ${server.id}`);
+
+      // Small delay between jobs when sending to all servers
+      if (selectedServers.length > 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
 
     log(`\n${colors.bold}Next steps:${colors.reset}`);
     log('1. Make sure the worker is running: node cookie-worker.js', colors.blue);
     log('2. Watch the worker logs for job processing', colors.blue);
-    log('3. The worker will launch Chrome - be ready to log into YouTube if needed', colors.blue);
+    if (selectedServers.length > 1) {
+      log('3. The worker will process each server sequentially', colors.blue);
+      log('4. You will need to sign in with a DIFFERENT YouTube account for each server:', colors.yellow);
+      selectedServers.forEach(s => {
+        log(`   - ${s.id}: Use YouTube account for ${s.chromeProfile}`, colors.cyan);
+      });
+    } else {
+      log('3. The worker will launch Chrome - be ready to log into YouTube if needed', colors.blue);
+    }
 
   } catch (error) {
     logError(`Failed to send test job: ${error.message}`);
