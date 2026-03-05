@@ -241,6 +241,8 @@ async function transferCookiesToServer(cookieFile, serverConfig) {
             host: serverConfig.host,
             port: serverConfig.port,
             username: serverConfig.username,
+            readyTimeout: 60000,  // 60 second timeout for initial connection
+            timeout: 120000,       // 2 minute overall timeout
         };
 
         if (serverConfig.authMethod === 'privateKey') {
@@ -252,8 +254,9 @@ async function transferCookiesToServer(cookieFile, serverConfig) {
             sshOptions.password = serverConfig.password;
         }
 
+        log(`Connecting to ${serverConfig.host}...`, colors.yellow);
         await ssh.connect(sshOptions);
-        log(`Connected to ${serverConfig.host}.`, colors.yellow);
+        log(`Connected to ${serverConfig.host}.`, colors.green);
 
         // Step A: Upload to /tmp using standard SFTP (No permission issues here)
         log(`Uploading to temporary path: ${tempRemotePath}`, colors.yellow);
